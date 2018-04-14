@@ -1,0 +1,95 @@
+curl -X POST \
+  http://localhost:5000/api/train \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json' \
+  -H 'Postman-Token: 55486888-493f-ccba-d5ba-cf9db3fea8d8' \
+  -d '{
+  "methods": [
+    {
+      "name": "gradientBoosting",
+      "value": 0.2
+    },
+    {
+      "name": "linear",
+      "value": 0.3
+    },
+    {
+      "name": "ridge",
+      "value": 0.5
+    }
+  ],
+  "baseFeatures": [
+    "Neighborhood",
+    "GarageFinish",
+    "Foundation",
+    "MSSubClass",
+    "GarageType",
+    "MasVnrType",
+    "GrLivArea",
+    "GarageCars",
+    "TotalBsmtSF",
+    "BsmtQual",
+    "FullBath",
+    "YearBuilt",
+    "YearRemodAdd",
+    "FireplaceQu",
+    "MasVnrArea",
+    "BsmtFinSF1"
+  ],
+  "toLogTransform": [
+    "GrLivArea",
+    "TotalBsmtSF",
+    "MasVnrArea",
+    "BsmtFinSF1"
+  ],
+  "toPowTransform": [
+    "YearBuilt",
+    "YearRemodAdd",
+    "TotalBsmtSF",
+    "Neighborhood",
+    "GrLivArea"
+  ],
+  "toBooleanTransform": [
+    {
+      "featureName": "TotalBsmtSF",
+      "newFeatureName": "HasBasement",
+      "threshold": 0
+    },
+    {
+      "featureName": "GarageArea",
+      "newFeatureName": "HasGarage",
+      "threshold": 0
+    },
+    {
+      "featureName": "2ndFlrSF",
+      "newFeatureName": "Has2ndFloor",
+      "threshold": 0
+    },
+    {
+      "featureName": "MasVnrArea",
+      "newFeatureName": "HasMasVnr",
+      "threshold": 0
+    },
+    {
+      "featureName": "WoodDeckSF",
+      "newFeatureName": "HasWoodDeck",
+      "threshold": 0
+    },
+    {
+      "featureName": "OpenPorchSF",
+      "newFeatureName": "HasPorch",
+      "threshold": 0
+    },
+    {
+      "featureName": "PoolArea",
+      "newFeatureName": "HasPool",
+      "threshold": 0
+    },
+    {
+      "featureName": "YearBuilt",
+      "newFeatureName": "IsNew",
+      "threshold": 2000
+    }
+  ]
+}
+'

@@ -1,0 +1,5 @@
+curl -X GET \
+  http://localhost:5000/api/model \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json' \
+  -H 'Postman-Token: 669fbdf7-e47f-c2db-161b-ab3900cde86c'

@@ -1,0 +1,21 @@
+**/.idea/ 
+#temparary files
+**/target/
+#file which is used by Dolphi
+.directory
+# Package Files #
+**.jar
+**.war
+**.ear
+**.zip
+**.tar.gz
+**.rar
+
+
+**/.ipynb_checkpoints/
+
+**/__pycache__/
+
+**.bin
+**submition.csv
+**.hdf5

@@ -1,0 +1,103 @@
+curl -X POST \
+  http://localhost:5000/api/predict \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json' \
+  -H 'Postman-Token: fef61cc5-f603-a906-4642-29dd9214699e' \
+  -d '[
+  {
+    "featureName": "HasBasement",
+    "value": true
+  },
+  {
+    "featureName": "HasGarage",
+    "value": true
+  },
+  {
+    "featureName": "Has2ndFloor",
+    "value": true
+  },
+  {
+    "featureName": "HasMasVnr",
+    "value": true
+  },
+  {
+    "featureName": "HasWoodDeck",
+    "value": false
+  },
+  {
+    "featureName": "HasPorch",
+    "value": true
+  },
+  {
+    "featureName": "HasPool",
+    "value": false
+  },
+  {
+    "featureName": "IsNew",
+    "value": true
+  },
+  {
+    "featureName": "GarageType",
+    "value": "Attchd"
+  },
+  {
+    "featureName": "MasVnrType",
+    "value": "BrkFace"
+  },
+  {
+    "featureName": "Neighborhood",
+    "value": "CollgCr"
+  },
+  {
+    "featureName": "GarageFinish",
+    "value": "RFn"
+  },
+  {
+    "featureName": "Foundation",
+    "value": "PConc"
+  },
+  {
+    "featureName": "MSSubClass",
+    "value": "SC60"
+  },
+  {
+    "featureName": "GarageCars",
+    "value": 2
+  },
+  {
+    "featureName": "FireplaceQu",
+    "value": 0
+  },
+  {
+    "featureName": "YearBuilt",
+    "value": 2003
+  },
+  {
+    "featureName": "TotalBsmtSF",
+    "value": 856
+  },
+  {
+    "featureName": "BsmtFinSF1",
+    "value": 706
+  },
+  {
+    "featureName": "FullBath",
+    "value": 2
+  },
+  {
+    "featureName": "BsmtQual",
+    "value": 4
+  },
+  {
+    "featureName": "YearRemodAdd",
+    "value": 2003
+  },
+  {
+    "featureName": "GrLivArea",
+    "value": 1710
+  },
+  {
+    "featureName": "MasVnrArea",
+    "value": 196
+  }
+]'
