@@ -15,6 +15,12 @@ def index():
     return "Web server is running"
 
 
+@app.route('/api/features', methods=['GET'])
+def get_features():
+    response_body = {"features": get_dataset_as_df().columns.tolist()}
+    return jsonify(response_body)
+
+
 @app.route('/api/train', methods=['POST'])
 def train():
     content = request.get_json()
