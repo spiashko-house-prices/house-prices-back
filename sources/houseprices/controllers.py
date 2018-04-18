@@ -17,7 +17,21 @@ def index():
 
 @app.route('/api/features', methods=['GET'])
 def get_features():
-    response_body = {"features": get_dataset_as_df().columns.tolist()}
+    response_body = get_dataset_as_df().columns.tolist()
+    response_body.remove('Id')
+    response_body.remove('SalePrice')
+    return jsonify(response_body)
+
+
+@app.route('/api/methods', methods=['GET'])
+def get_methods():
+    response_body = [
+        'gradientBoosting',
+        'linear',
+        'ridge',
+        'lasso_lars',
+        'elastic_net'
+    ]
     return jsonify(response_body)
 
 
