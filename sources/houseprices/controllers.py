@@ -62,5 +62,5 @@ def predict():
 
     prediction = predict_request_processor(content)
 
-    response_body = {"prediction": prediction}
+    response_body = {"value": prediction}
     return jsonify(response_body)
