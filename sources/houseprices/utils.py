@@ -1,9 +1,17 @@
+import os
+from pymongo import MongoClient
 import numpy as np
 import pandas as pd
 
+from houseprices import db
+
 
 def get_dataset_as_df():
-    return pd.read_csv('../input/train.csv')
+    houses = db["houses"].find({})
+
+    df = pd.DataFrame(list(houses))
+
+    return df
 
 
 def get_cleaned_dataset(df):
@@ -117,6 +125,14 @@ def prepare_model(frame, dummies, numerical_int, numerical_float, categorical, a
     return model_for_client
 
 
+def get_type_list(g, type_name):
+    try:
+        result = g[type_name].tolist()
+    except KeyError:
+        result = []
+    return result
+
+
 def get_features_by_type(df_train_cleaned, base_features):
     # get features by type
     """
@@ -128,9 +144,10 @@ def get_features_by_type(df_train_cleaned, base_features):
     """
     g = {k.name: v for k, v in df_train_cleaned[base_features].columns.to_series().groupby(
         df_train_cleaned[base_features].dtypes).groups.items()}
-    categorical = g["object"].tolist()
-    numerical_int = g["int64"].tolist()
-    numerical_float = g["float64"].tolist()
+
+    categorical = get_type_list(g, "object")
+    numerical_int = get_type_list(g, "int64")
+    numerical_float = get_type_list(g, "float64")
 
     return categorical, numerical_int, numerical_float
 

@@ -1,8 +1,11 @@
 import pickle
-import pandas as pd
-import numpy as np
 
-from houseprices.constants import path_to_client_model, path_to_prediction_stuff, get_trainer_path, available_trainers
+import numpy as np
+import pandas as pd
+from bson.binary import Binary
+
+from houseprices import db
+from houseprices.constants import available_trainers
 from houseprices.train_service.trainers import train_gb, calc_error, train_linear, train_ridge, train_lasso_lars
 from houseprices.utils import fill_na, make_transform, dealing_with_missing_data, get_features_by_type, \
     perform_encoding, get_filtered_features_for_transform, get_added_columns, transform_before_learn, prepare_model
@@ -53,7 +56,8 @@ def train_request_preprocessor(df_train_cleaned, content):
 
     model_for_client = prepare_model(df_train_cleaned, dummies, numerical_int, numerical_float, categorical,
                                      boolean_columns)
-    pickle.dump(model_for_client, open(path_to_client_model, "wb"))
+
+    model_for_client_bytes = pickle.dumps(model_for_client)
 
     # define full features list
     features_full_list = filtered_base_features + quadratic_columns + log_columns + boolean_columns
@@ -61,7 +65,11 @@ def train_request_preprocessor(df_train_cleaned, content):
     # save stuff for future prediction
     prediction_stuff = {"methods": content['methods'], "features_full_list": features_full_list, "dummies": dummies,
                         "to_log_transform": to_log_transform, "to_pow_transform": to_pow_transform}
-    pickle.dump(prediction_stuff, open(path_to_prediction_stuff, "wb"))
+    prediction_stuff_bytes = pickle.dumps(prediction_stuff)
+
+    instance_collection = db["instance"]
+    instance_collection.insert_one({"objectName": "model_for_client", "value": Binary(model_for_client_bytes)})
+    instance_collection.insert_one({"objectName": "prediction_stuff", "value": Binary(prediction_stuff_bytes)})
 
     return features_full_list
 
@@ -93,29 +101,30 @@ def train_request_processor(df_train_cleaned, df_train, features_full_list, cont
 
 
 def train_methods(methods_df, df_train_cleaned, df_train, features_full_list):
+    instance_collection = db["instance"]
     used_trainers = {}
     if "gradientBoosting" in methods_df['name'].tolist():
         trainer = train_gb(df_train_cleaned=df_train_cleaned, df_train=df_train, features_full_list=features_full_list)
-        pickle.dump(trainer, open(get_trainer_path("gradientBoosting"), "wb"))
+        instance_collection.insert_one({"objectName": "gradientBoosting", "value": Binary(pickle.dumps(trainer))})
         used_trainers["gradientBoosting"] = trainer
     if "linear" in methods_df['name'].tolist():
         trainer = train_linear(df_train_cleaned=df_train_cleaned, df_train=df_train,
                                features_full_list=features_full_list)
-        pickle.dump(trainer, open(get_trainer_path("linear"), "wb"))
+        instance_collection.insert_one({"objectName": "linear", "value": Binary(pickle.dumps(trainer))})
         used_trainers["linear"] = trainer
     if "ridge" in methods_df['name'].tolist():
         trainer = train_ridge(df_train_cleaned=df_train_cleaned, df_train=df_train,
                               features_full_list=features_full_list)
-        pickle.dump(trainer, open(get_trainer_path("ridge"), "wb"))
+        instance_collection.insert_one({"objectName": "ridge", "value": Binary(pickle.dumps(trainer))})
         used_trainers["ridge"] = trainer
     if "lasso_lars" in methods_df['name'].tolist():
         trainer = train_lasso_lars(df_train_cleaned=df_train_cleaned, df_train=df_train,
                                    features_full_list=features_full_list)
-        pickle.dump(trainer, open(get_trainer_path("lasso_lars"), "wb"))
+        instance_collection.insert_one({"objectName": "lasso_lars", "value": Binary(pickle.dumps(trainer))})
         used_trainers["lasso_lars"] = trainer
     if "elastic_net" in methods_df['name'].tolist():
         trainer = train_lasso_lars(df_train_cleaned=df_train_cleaned, df_train=df_train,
                                    features_full_list=features_full_list)
-        pickle.dump(trainer, open(get_trainer_path("elastic_net"), "wb"))
+        instance_collection.insert_one({"objectName": "elastic_net", "value": Binary(pickle.dumps(trainer))})
         used_trainers["elastic_net"] = trainer
     return used_trainers

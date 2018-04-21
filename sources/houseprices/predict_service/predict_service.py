@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from houseprices.constants import path_to_prediction_stuff, get_trainer_path
+from houseprices import db
 from houseprices.utils import prepare_predict_df
 
 
@@ -12,7 +12,8 @@ def predict_request_processor(content):
     for item in content:
         predict_df[item["featureName"]] = [item["value"]]
 
-    prediction_stuff = pickle.load(open(path_to_prediction_stuff, "rb"))
+    instance_collection = db["instance"]
+    prediction_stuff = pickle.loads(instance_collection.find_one({"objectName": "prediction_stuff"})["value"])
     features_full_list = prediction_stuff["features_full_list"]
     dummies = prediction_stuff["dummies"]
     to_log_transform = prediction_stuff["to_log_transform"]
@@ -30,7 +31,7 @@ def predict_request_processor(content):
     for trainer in methods_df['name']:
         value = float(methods_df.loc[methods_df['name'] == trainer]['value'])
         values_sum += value
-        trainer = pickle.load(open(get_trainer_path(trainer), "rb"))
+        trainer = pickle.loads(instance_collection.find_one({"objectName": trainer})["value"])
         prediction = prediction + float(
             np.around(np.expm1(trainer.model.predict(predict_df[features_full_list])), decimals=0)) * value
 
