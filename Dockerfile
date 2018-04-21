@@ -10,19 +10,10 @@ USER myuser
 
 WORKDIR /home/myuser
 
-RUN mkdir sources
-RUN mkdir input
+COPY ./houseprices houseprices
+COPY ./run.py run.py
 
-COPY ./sources/houseprices sources/houseprices
-COPY ./sources/logging.conf sources/logging.conf
-COPY ./sources/run.py sources/run.py
-COPY ./input/train.csv input/train.csv
-
-WORKDIR /home/myuser/sources
-
-RUN mkdir instance
-
-VOLUME /home/myuser/sources/instance
+WORKDIR /home/myuser
 
 EXPOSE 5000
 
