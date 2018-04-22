@@ -68,8 +68,12 @@ def train_request_preprocessor(df_train_cleaned, content):
     prediction_stuff_bytes = pickle.dumps(prediction_stuff)
 
     instance_collection = db["instance"]
-    instance_collection.insert_one({"objectName": "model_for_client", "value": Binary(model_for_client_bytes)})
-    instance_collection.insert_one({"objectName": "prediction_stuff", "value": Binary(prediction_stuff_bytes)})
+    instance_collection.replace_one({"objectName": "model_for_client"},
+                                    {"objectName": "model_for_client", "value": Binary(model_for_client_bytes)},
+                                    upsert=True)
+    instance_collection.replace_one({"objectName": "prediction_stuff"},
+                                    {"objectName": "prediction_stuff", "value": Binary(prediction_stuff_bytes)},
+                                    upsert=True)
 
     return features_full_list
 
@@ -105,26 +109,36 @@ def train_methods(methods_df, df_train_cleaned, df_train, features_full_list):
     used_trainers = {}
     if "gradientBoosting" in methods_df['name'].tolist():
         trainer = train_gb(df_train_cleaned=df_train_cleaned, df_train=df_train, features_full_list=features_full_list)
-        instance_collection.insert_one({"objectName": "gradientBoosting", "value": Binary(pickle.dumps(trainer))})
+        instance_collection.replace_one({"objectName": "gradientBoosting"},
+                                        {"objectName": "gradientBoosting", "value": Binary(pickle.dumps(trainer))},
+                                        upsert=True)
         used_trainers["gradientBoosting"] = trainer
     if "linear" in methods_df['name'].tolist():
         trainer = train_linear(df_train_cleaned=df_train_cleaned, df_train=df_train,
                                features_full_list=features_full_list)
-        instance_collection.insert_one({"objectName": "linear", "value": Binary(pickle.dumps(trainer))})
+        instance_collection.replace_one({"objectName": "linear"},
+                                        {"objectName": "linear", "value": Binary(pickle.dumps(trainer))},
+                                        upsert=True)
         used_trainers["linear"] = trainer
     if "ridge" in methods_df['name'].tolist():
         trainer = train_ridge(df_train_cleaned=df_train_cleaned, df_train=df_train,
                               features_full_list=features_full_list)
-        instance_collection.insert_one({"objectName": "ridge", "value": Binary(pickle.dumps(trainer))})
+        instance_collection.replace_one({"objectName": "ridge"},
+                                        {"objectName": "ridge", "value": Binary(pickle.dumps(trainer))},
+                                        upsert=True)
         used_trainers["ridge"] = trainer
     if "lasso_lars" in methods_df['name'].tolist():
         trainer = train_lasso_lars(df_train_cleaned=df_train_cleaned, df_train=df_train,
                                    features_full_list=features_full_list)
-        instance_collection.insert_one({"objectName": "lasso_lars", "value": Binary(pickle.dumps(trainer))})
+        instance_collection.replace_one({"objectName": "lasso_lars"},
+                                        {"objectName": "lasso_lars", "value": Binary(pickle.dumps(trainer))},
+                                        upsert=True)
         used_trainers["lasso_lars"] = trainer
     if "elastic_net" in methods_df['name'].tolist():
         trainer = train_lasso_lars(df_train_cleaned=df_train_cleaned, df_train=df_train,
                                    features_full_list=features_full_list)
-        instance_collection.insert_one({"objectName": "elastic_net", "value": Binary(pickle.dumps(trainer))})
+        instance_collection.replace_one({"objectName": "elastic_net"},
+                                        {"objectName": "elastic_net", "value": Binary(pickle.dumps(trainer))},
+                                        upsert=True)
         used_trainers["elastic_net"] = trainer
     return used_trainers
