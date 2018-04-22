@@ -20,6 +20,7 @@ def get_features():
     response_body = get_dataset_as_df().columns.tolist()
     response_body.remove('Id')
     response_body.remove('SalePrice')
+    response_body.remove('_id')
     return jsonify(response_body)
 
 
