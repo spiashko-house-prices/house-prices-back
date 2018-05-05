@@ -25,4 +25,3 @@ def upload(df_train, df_test, mongodb_url):
 
     test_data.remove({})
     test_data.insert_many(df_test.to_dict('records'))
-

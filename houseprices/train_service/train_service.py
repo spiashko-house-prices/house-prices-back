@@ -144,3 +144,10 @@ def train_methods(methods_df, df_train, df_test, features_full_list):
                                         upsert=True)
         used_trainers["elastic_net"] = trainer
     return used_trainers
+
+
+def save_admin_model(content):
+    instance_collection = db["instance"]
+    instance_collection.replace_one({"objectName": "admin_model"},
+                                    {"objectName": "admin_model", "value": content},
+                                    upsert=True)

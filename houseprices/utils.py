@@ -216,4 +216,3 @@ def encode_df(frame, dummies):
 def prepare_predict_df(predict_df, dummies, to_log_transform, to_pow_transform):
     encode_df(predict_df, dummies)
     transform_before_predict(predict_df, to_log_transform, to_pow_transform)
-

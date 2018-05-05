@@ -4,9 +4,10 @@ from flask import jsonify
 from flask import request
 
 from houseprices import app
-from houseprices.constants import path_to_client_model, available_trainers
+from houseprices.constants import available_trainers
 from houseprices.predict_service.predict_service import predict_request_processor
-from houseprices.train_service.train_service import train_request_preprocessor, train_request_processor, verify_request
+from houseprices.train_service.train_service import train_request_preprocessor, train_request_processor, verify_request, \
+    save_admin_model
 from houseprices.utils import *
 
 
@@ -39,7 +40,16 @@ def train():
     features_full_list = train_request_preprocessor(df_train, df_test, content)
 
     response_body = train_request_processor(df_train, df_train, features_full_list, content)
+
+    save_admin_model(content)
     return jsonify(response_body)
+
+
+@app.route('/api/admin_model', methods=['GET'])
+def get_admin_model():
+    instance_collection = db["instance"]
+    admin_model = instance_collection.find_one({"objectName": "admin_model"})["value"]
+    return jsonify(admin_model)
 
 
 @app.route('/api/model', methods=['GET'])
