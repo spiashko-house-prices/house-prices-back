@@ -39,7 +39,7 @@ def train():
     df_test = get_test_data_as_df()
     features_full_list = train_request_preprocessor(df_train, df_test, content)
 
-    response_body = train_request_processor(df_train, df_train, features_full_list, content)
+    response_body = train_request_processor(df_train, df_test, features_full_list, content)
 
     save_admin_model(content)
     return jsonify(response_body)

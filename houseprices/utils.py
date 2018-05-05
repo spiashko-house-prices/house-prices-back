@@ -31,6 +31,9 @@ def dealing_with_missing_data(df_train, features):
     :return: list of applicable features
     """
 
+    if len(features) == 0:
+        return features
+
     # missing data
     total = df_train[features].isnull().sum().sort_values(ascending=False)
     percent = (df_train[features].isnull().sum() / df_train[features].isnull().count()).sort_values(ascending=False)

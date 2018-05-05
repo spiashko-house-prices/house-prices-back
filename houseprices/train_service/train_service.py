@@ -53,6 +53,8 @@ def train_request_preprocessor(df_train, df_test, content):
 
     transform_before_learn(df_train, to_log_transform, to_pow_transform,
                            to_boolean_transform)
+    transform_before_learn(df_test, to_log_transform, to_pow_transform,
+                           to_boolean_transform)
 
     model_for_client = prepare_model(df_train, dummies, numerical_int, numerical_float, categorical,
                                      boolean_columns)
