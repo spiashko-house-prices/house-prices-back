@@ -6,9 +6,10 @@ from bson.binary import Binary
 
 from houseprices import db
 from houseprices.constants import available_trainers
-from houseprices.train_service.trainers import train_gb, calc_error, train_linear, train_ridge, train_lasso_lars
-from houseprices.utils import fill_na, make_transform, dealing_with_missing_data, get_features_by_type, \
-    perform_encoding, get_filtered_features_for_transform, get_added_columns, transform_before_learn, prepare_model
+from houseprices.train_service.trainers import GradientBoosting, Linear, Ridge, Lasso, ElasticNet, Trainer
+from houseprices.utils import dealing_with_missing_data, get_features_by_type, \
+    perform_encoding, get_filtered_features_for_transform, get_added_columns, transform_before_learn, prepare_model, \
+    encode_df
 
 
 def verify_request(content):
@@ -25,23 +26,22 @@ def verify_request(content):
     assert values_sum == 1
 
 
-def train_request_preprocessor(df_train_cleaned, content):
-    # pre-compute
-    fill_na(df_train_cleaned)
-    make_transform(df_train_cleaned)
-
+def train_request_preprocessor(df_train, df_test, content):
     # filtering
     base_features = content['baseFeatures']
-    filtered_base_features = dealing_with_missing_data(df_train_cleaned, base_features)
+    filtered_base_features = dealing_with_missing_data(df_train, base_features)
 
     features_to_boolean_transform = [o['featureName'] for o in content['toBooleanTransform']]
-    filtered_features_to_boolean_transform = dealing_with_missing_data(df_train_cleaned, features_to_boolean_transform)
+    filtered_features_to_boolean_transform = dealing_with_missing_data(df_train, features_to_boolean_transform)
 
     # get types
-    categorical, numerical_int, numerical_float = get_features_by_type(df_train_cleaned, filtered_base_features)
+    categorical, numerical_int, numerical_float = get_features_by_type(df_train, filtered_base_features)
 
     # perform_encoding
-    dummies = perform_encoding(df_train_cleaned, categorical)
+    full_frame = pd.concat([df_train, df_test])
+    dummies = perform_encoding(full_frame, categorical)
+    encode_df(df_train, dummies)
+    encode_df(df_test, dummies)
 
     # start build model
     to_log_transform, to_pow_transform, to_boolean_transform = get_filtered_features_for_transform(
@@ -51,10 +51,10 @@ def train_request_preprocessor(df_train_cleaned, content):
                                                                         to_pow_transform,
                                                                         to_boolean_transform)
 
-    transform_before_learn(df_train_cleaned, to_log_transform, to_pow_transform,
+    transform_before_learn(df_train, to_log_transform, to_pow_transform,
                            to_boolean_transform)
 
-    model_for_client = prepare_model(df_train_cleaned, dummies, numerical_int, numerical_float, categorical,
+    model_for_client = prepare_model(df_train, dummies, numerical_int, numerical_float, categorical,
                                      boolean_columns)
 
     model_for_client_bytes = pickle.dumps(model_for_client)
@@ -91,52 +91,54 @@ def train_request_processor(df_train_cleaned, df_train, features_full_list, cont
     prediction = np.zeros(len(df_train['SalePrice']))
     for trainer in used_trainers.keys():
         value = float(methods_df.loc[methods_df['name'] == trainer]['value'])
-        prediction = prediction + np.expm1(used_trainers[trainer].model.predict(df_train[features_full_list])) * value
+        prediction = prediction + used_trainers[trainer].predict(df_train[features_full_list]) * value
 
-    final_error = calc_error(df_train['SalePrice'].values, prediction)
+    final_error = Trainer.calc_error(df_train['SalePrice'].values, prediction)
 
     errors_per_trainer = []
     for trainer in used_trainers.keys():
-        errors_per_trainer.append({'name': used_trainers[trainer].name, 'error': float(used_trainers[trainer].error)})
+        errors_per_trainer.append(
+            {'name': used_trainers[trainer].get_name(), 'error': float(used_trainers[trainer].error)})
 
     response_dict = {'finalError': float(final_error), 'errorsPerTrainer': errors_per_trainer}
 
     return response_dict
 
 
-def train_methods(methods_df, df_train_cleaned, df_train, features_full_list):
+def train_methods(methods_df, df_train, df_test, features_full_list):
     instance_collection = db["instance"]
     used_trainers = {}
     if "gradientBoosting" in methods_df['name'].tolist():
-        trainer = train_gb(df_train_cleaned=df_train_cleaned, df_train=df_train, features_full_list=features_full_list)
+        trainer = GradientBoosting()
+        trainer.train(df_train, df_test, features_full_list)
         instance_collection.replace_one({"objectName": "gradientBoosting"},
                                         {"objectName": "gradientBoosting", "value": Binary(pickle.dumps(trainer))},
                                         upsert=True)
         used_trainers["gradientBoosting"] = trainer
     if "linear" in methods_df['name'].tolist():
-        trainer = train_linear(df_train_cleaned=df_train_cleaned, df_train=df_train,
-                               features_full_list=features_full_list)
+        trainer = Linear()
+        trainer.train(df_train, df_test, features_full_list)
         instance_collection.replace_one({"objectName": "linear"},
                                         {"objectName": "linear", "value": Binary(pickle.dumps(trainer))},
                                         upsert=True)
         used_trainers["linear"] = trainer
     if "ridge" in methods_df['name'].tolist():
-        trainer = train_ridge(df_train_cleaned=df_train_cleaned, df_train=df_train,
-                              features_full_list=features_full_list)
+        trainer = Ridge()
+        trainer.train(df_train, df_test, features_full_list)
         instance_collection.replace_one({"objectName": "ridge"},
                                         {"objectName": "ridge", "value": Binary(pickle.dumps(trainer))},
                                         upsert=True)
         used_trainers["ridge"] = trainer
-    if "lasso_lars" in methods_df['name'].tolist():
-        trainer = train_lasso_lars(df_train_cleaned=df_train_cleaned, df_train=df_train,
-                                   features_full_list=features_full_list)
-        instance_collection.replace_one({"objectName": "lasso_lars"},
-                                        {"objectName": "lasso_lars", "value": Binary(pickle.dumps(trainer))},
+    if "lasso" in methods_df['name'].tolist():
+        trainer = Lasso()
+        trainer.train(df_train, df_test, features_full_list)
+        instance_collection.replace_one({"objectName": "lasso"},
+                                        {"objectName": "lasso", "value": Binary(pickle.dumps(trainer))},
                                         upsert=True)
-        used_trainers["lasso_lars"] = trainer
+        used_trainers["lasso"] = trainer
     if "elastic_net" in methods_df['name'].tolist():
-        trainer = train_lasso_lars(df_train_cleaned=df_train_cleaned, df_train=df_train,
-                                   features_full_list=features_full_list)
+        trainer = ElasticNet()
+        trainer.train(df_train, df_test, features_full_list)
         instance_collection.replace_one({"objectName": "elastic_net"},
                                         {"objectName": "elastic_net", "value": Binary(pickle.dumps(trainer))},
                                         upsert=True)

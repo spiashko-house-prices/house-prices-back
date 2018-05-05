@@ -4,7 +4,7 @@ from flask import jsonify
 from flask import request
 
 from houseprices import app
-from houseprices.constants import path_to_client_model
+from houseprices.constants import path_to_client_model, available_trainers
 from houseprices.predict_service.predict_service import predict_request_processor
 from houseprices.train_service.train_service import train_request_preprocessor, train_request_processor, verify_request
 from houseprices.utils import *
@@ -17,8 +17,7 @@ def index():
 
 @app.route('/api/features', methods=['GET'])
 def get_features():
-    response_body = get_dataset_as_df().columns.tolist()
-    response_body.remove('Id')
+    response_body = get_train_data_as_df().columns.tolist()
     response_body.remove('SalePrice')
     response_body.remove('_id')
     return jsonify(response_body)
@@ -26,14 +25,7 @@ def get_features():
 
 @app.route('/api/methods', methods=['GET'])
 def get_methods():
-    response_body = [
-        'gradientBoosting',
-        'linear',
-        'ridge',
-        'lasso_lars',
-        'elastic_net'
-    ]
-    return jsonify(response_body)
+    return jsonify(available_trainers)
 
 
 @app.route('/api/train', methods=['POST'])
@@ -42,12 +34,11 @@ def train():
 
     verify_request(content)
 
-    df_train = get_dataset_as_df()
-    df_train_cleaned = get_cleaned_dataset(df_train)
+    df_train = get_train_data_as_df()
+    df_test = get_test_data_as_df()
+    features_full_list = train_request_preprocessor(df_train, df_test, content)
 
-    features_full_list = train_request_preprocessor(df_train_cleaned, content)
-
-    response_body = train_request_processor(df_train_cleaned, df_train, features_full_list, content)
+    response_body = train_request_processor(df_train, df_train, features_full_list, content)
     return jsonify(response_body)
 
 
