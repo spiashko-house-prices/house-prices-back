@@ -13,7 +13,7 @@ def predict_request_processor(content):
         predict_df[item["featureName"]] = [item["value"]]
 
     instance_collection = db["instance"]
-    prediction_stuff = pickle.loads(instance_collection.find_one({"objectName": "prediction_stuff"})["value"])
+    prediction_stuff = instance_collection.find_one({"objectName": "prediction_stuff"})["value"]
     features_full_list = prediction_stuff["features_full_list"]
     dummies = prediction_stuff["dummies"]
     to_log_transform = prediction_stuff["to_log_transform"]

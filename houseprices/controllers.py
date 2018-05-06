@@ -1,5 +1,3 @@
-import pickle
-
 from flask import jsonify
 from flask import request
 
@@ -55,7 +53,7 @@ def get_admin_model():
 @app.route('/api/model', methods=['GET'])
 def get_model():
     instance_collection = db["instance"]
-    model_for_client = pickle.loads(instance_collection.find_one({"objectName": "model_for_client"})["value"])
+    model_for_client = instance_collection.find_one({"objectName": "model_for_client"})["value"]
     return jsonify(model_for_client)
 
 

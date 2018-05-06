@@ -59,22 +59,19 @@ def train_request_preprocessor(df_train, df_test, content):
     model_for_client = prepare_model(df_train, dummies, numerical_int, numerical_float, categorical,
                                      boolean_columns)
 
-    model_for_client_bytes = pickle.dumps(model_for_client)
-
     # define full features list
     features_full_list = filtered_base_features + quadratic_columns + log_columns + boolean_columns
 
     # save stuff for future prediction
     prediction_stuff = {"methods": content['methods'], "features_full_list": features_full_list, "dummies": dummies,
                         "to_log_transform": to_log_transform, "to_pow_transform": to_pow_transform}
-    prediction_stuff_bytes = pickle.dumps(prediction_stuff)
 
     instance_collection = db["instance"]
     instance_collection.replace_one({"objectName": "model_for_client"},
-                                    {"objectName": "model_for_client", "value": Binary(model_for_client_bytes)},
+                                    {"objectName": "model_for_client", "value": model_for_client},
                                     upsert=True)
     instance_collection.replace_one({"objectName": "prediction_stuff"},
-                                    {"objectName": "prediction_stuff", "value": Binary(prediction_stuff_bytes)},
+                                    {"objectName": "prediction_stuff", "value": prediction_stuff},
                                     upsert=True)
 
     return features_full_list
