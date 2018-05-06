@@ -17,5 +17,5 @@
 **/__pycache__/
 
 **.bin
-**submition.csv
+**.csv
 **.hdf5
