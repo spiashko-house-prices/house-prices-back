@@ -4,6 +4,8 @@ from flask import Flask
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 from pymongo import MongoClient
+import warnings
+warnings.filterwarnings('ignore')
 
 MONGODB_URL = os.environ['MONGODB_URI']
 client = MongoClient(MONGODB_URL)
