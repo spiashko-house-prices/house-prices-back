@@ -77,7 +77,7 @@ def train_request_preprocessor(df_train, df_test, content):
     return features_full_list
 
 
-def train_request_processor(df_train_cleaned, df_train, features_full_list, content):
+def train_request_processor(df_train, df_test, features_full_list, content):
     # training
     methods = content['methods']
 
@@ -85,14 +85,14 @@ def train_request_processor(df_train_cleaned, df_train, features_full_list, cont
     methods_df['name'] = [o['name'] for o in methods]
     methods_df['value'] = [o['value'] for o in methods]
 
-    used_trainers = train_methods(methods_df, df_train_cleaned, df_train, features_full_list)
+    used_trainers = train_methods(methods_df, df_train, df_test, features_full_list)
 
-    prediction = np.zeros(len(df_train['SalePrice']))
+    prediction = np.zeros(len(df_test['SalePrice']))
     for trainer in used_trainers.keys():
         value = float(methods_df.loc[methods_df['name'] == trainer]['value'])
-        prediction = prediction + used_trainers[trainer].predict(df_train[features_full_list]) * value
+        prediction = prediction + used_trainers[trainer].predict(df_test[features_full_list]) * value
 
-    final_error = Trainer.calc_error(df_train['SalePrice'].values, prediction)
+    final_error = Trainer.calc_error(df_test['SalePrice'].values, prediction)
 
     errors_per_trainer = []
     for trainer in used_trainers.keys():
