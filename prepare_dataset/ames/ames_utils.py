@@ -111,3 +111,30 @@ def rename_columns(frame):
     columns = frame.columns
     new_names = [column.replace(" ", "").replace("/", "") for column in columns]
     frame.rename(index=str, columns=dict(zip(columns, new_names)), inplace=True)
+
+
+def dealing_with_missing_data(frame):
+    """
+
+    :rtype: list
+    :type frame: pd.DataFrame
+    :param frame:
+    :return: list of applicable features
+    """
+
+    # missing data
+    total = frame.isnull().sum().sort_values(ascending=False)
+    percent = (frame.isnull().sum() / frame.isnull().count()).sort_values(ascending=False)
+    missing_data = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
+    print(missing_data.head(10))
+
+    # remove features where data is missed more then 5 times
+    features = (missing_data[missing_data['Total'] > 5]).index.tolist()
+    print("features to remove: ")
+    print(features)
+
+    frame.drop(columns=features, inplace=True)
+
+    # remove left images where data is missed
+    frame.drop(frame.loc[frame.isnull().any(axis=1)].index, inplace=True)
+    assert frame.isnull().sum().max() == 0  # just checking that there's no missing data missing...

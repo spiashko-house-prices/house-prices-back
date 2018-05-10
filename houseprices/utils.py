@@ -219,3 +219,46 @@ def encode_df(frame, dummies):
 def prepare_predict_df(predict_df, dummies, to_log_transform, to_pow_transform):
     encode_df(predict_df, dummies)
     transform_before_predict(predict_df, to_log_transform, to_pow_transform)
+
+
+def encode(frame, feature):
+    ordering = pd.DataFrame()
+    ordering['val'] = frame[feature].unique()
+    ordering.index = ordering.val
+    ordering['spmean'] = frame[[feature, 'SalePrice']].groupby(feature).mean()['SalePrice']
+    ordering = ordering.sort_values('spmean')
+    ordering['ordering'] = range(1, ordering.shape[0] + 1)
+    ordering = ordering['ordering'].to_dict()
+
+    for cat, o in ordering.items():
+        frame.loc[frame[feature] == cat, feature] = o
+
+    return ordering
+
+
+def encode_on_startup():
+    train_data = db["train_data"].find({})
+    test_data = db["test_data"].find({})
+    full_frame = pd.concat([train_data, test_data])
+    full_frame.reset_index(drop=True, inplace=True)
+
+    # get categorical features list
+    g = {k.name: v for k, v in
+         full_frame.columns.to_series().groupby(full_frame.dtypes).groups.items()}
+    categorical = g["object"].tolist()
+
+    dummies = {}
+
+    for c in categorical:
+        dummies[c] = encode(full_frame, c)
+
+    notebook_collection = db["encoded_dataset"]
+    notebook_collection.remove({})
+    notebook_collection.insert_many(full_frame.to_dict('records'))
+
+    instance_collection = db["instance"]
+    instance_collection.replace_one({"objectName": "train_data_size"},
+                                    {"objectName": "train_data_size", "value": train_data.size},
+                                    upsert=True)
+
+    return dummies

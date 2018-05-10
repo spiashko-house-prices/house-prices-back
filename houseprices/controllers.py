@@ -53,7 +53,17 @@ def train():
 
     df_train = get_train_data_as_df()
     df_test = get_test_data_as_df()
-    features_full_list = train_request_preprocessor(df_train, df_test, content)
+
+    df_train_size = df_train.shape[0]
+
+    full_frame = pd.concat([df_train, df_test])
+    full_frame.reset_index(drop=True, inplace=True)
+    features_full_list = train_request_preprocessor(full_frame, content)
+
+    df_train = full_frame[:df_train_size]
+    df_test = full_frame[df_train_size:]
+    df_train.reset_index(drop=True, inplace=True)
+    df_test.reset_index(drop=True, inplace=True)
 
     response_body = train_request_processor(df_train, df_test, features_full_list, content)
 

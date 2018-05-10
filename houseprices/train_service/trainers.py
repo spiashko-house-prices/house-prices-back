@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 
-import numpy as np
 import pandas as pd
+import numpy as np
 import xgboost as xgb
-from sklearn import linear_model
+from sklearn import linear_model as linear_model
+from sklearn.model_selection import train_test_split
 
 
 class Trainer(ABC):
@@ -39,7 +40,8 @@ class Trainer(ABC):
 
         self.model = self._fit_model(x, np.log1p(y))
 
-        self.error = Trainer.calc_error(test_y, np.expm1(self.model.predict(test_x)))
+        preds = np.expm1(self.model.predict(test_x))
+        self.error = Trainer.calc_error(test_y, preds)
 
     def predict(self, x):
         return np.expm1(self.model.predict(x))
@@ -61,8 +63,10 @@ class GradientBoosting(Trainer):
         return "gradientBoosting"
 
     def _fit_model(self, x, y):
-        model_xgb = xgb.XGBRegressor(n_estimators=250, max_depth=2, learning_rate=0.1)
-        model_xgb.fit(x, y)
+        x_tr, x_val, y_tr, y_val = train_test_split(x, y, random_state=42, test_size=0.20)
+        eval_set = [(x_val, y_val)]
+        model_xgb = xgb.XGBRegressor(n_estimators=1000, max_depth=2, learning_rate=0.1)
+        model_xgb.fit(x_tr, y_tr, eval_metric="rmse", early_stopping_rounds=500, eval_set=eval_set, verbose=False)
         return model_xgb
 
 
@@ -83,7 +87,7 @@ class Ridge(Trainer):
         return "ridge"
 
     def _fit_model(self, x, y):
-        ridge = linear_model.RidgeCV(cv=10)
+        ridge = linear_model.RidgeCV()
         ridge.fit(x, y)
         return ridge
 
@@ -105,6 +109,6 @@ class ElasticNet(Trainer):
         return "elastic_net"
 
     def _fit_model(self, x, y):
-        elastic_net = linear_model.ElasticNetCV(cv=10)
+        elastic_net = linear_model.ElasticNetCV()
         elastic_net.fit(x, y)
         return elastic_net
