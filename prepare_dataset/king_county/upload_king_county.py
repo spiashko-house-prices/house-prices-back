@@ -25,7 +25,6 @@ upload(train_data, test_data, mongodb_url)
 
 print("done.")
 
-
 to_log_transform = ["GrLivArea", "TotalBsmtSF", "MasVnrArea", "BsmtFinSF1"]
 
 to_pow_transform = ["YearBuilt", "YearRemodAdd", "TotalBsmtSF", "Neighborhood", "GrLivArea"]

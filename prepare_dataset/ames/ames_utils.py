@@ -102,6 +102,19 @@ def make_transform(frame):
     )
 
 
+def update_dots(frame):
+    """
+    :type frame: pd.DataFrame
+    :param frame:
+    """
+    frame.replace(
+        {
+            "HouseStyle": {"1.5Fin": "1_5Fin", "1.5Unf": "1_5Unf", "2.5Fin": "2_5Fin", "2.5Unf": "2_5Unf"}
+        },
+        inplace=True
+    )
+
+
 def rename_columns(frame):
     """
     Remove whitespaces in column names.

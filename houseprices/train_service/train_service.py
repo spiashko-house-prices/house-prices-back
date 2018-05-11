@@ -7,9 +7,7 @@ from bson.binary import Binary
 from houseprices import db
 from houseprices.constants import available_trainers
 from houseprices.train_service.trainers import GradientBoosting, Linear, Ridge, Lasso, ElasticNet, Trainer
-from houseprices.utils import get_features_by_type, \
-    perform_encoding, get_filtered_features_for_transform, get_added_columns, transform_before_learn, prepare_model, \
-    encode_df
+from houseprices.utils import get_features_for_transform, get_added_columns, transform_before_learn, prepare_model
 
 
 def verify_request(content):
@@ -31,14 +29,21 @@ def train_request_preprocessor(full_frame, content):
     base_features = content['baseFeatures']
     features_to_boolean_transform = [o['featureName'] for o in content['toBooleanTransform']]
 
-    # get types
-    categorical, numerical_int, numerical_float = get_features_by_type(full_frame)
+    instance_collection = db["instance"]
+    dummies = instance_collection.find_one({"objectName": "dummies"})["value"]
 
-    # perform_encoding
-    dummies = perform_encoding(full_frame, categorical)
+    # load all features by types
+    categorical = instance_collection.find_one({"objectName": "categorical"})["value"]
+    numerical_int = instance_collection.find_one({"objectName": "numerical_int"})["value"]
+    numerical_float = instance_collection.find_one({"objectName": "numerical_float"})["value"]
+
+    # apply for current base_features
+    categorical = list(set(categorical).intersection(base_features))
+    numerical_int = list(set(numerical_int).intersection(base_features))
+    numerical_float = list(set(numerical_float).intersection(base_features))
 
     # start build model
-    to_log_transform, to_pow_transform, to_boolean_transform = get_filtered_features_for_transform(
+    to_log_transform, to_pow_transform, to_boolean_transform = get_features_for_transform(
         base_features, features_to_boolean_transform, content)
 
     log_columns, quadratic_columns, boolean_columns = get_added_columns(to_log_transform,
@@ -55,10 +60,9 @@ def train_request_preprocessor(full_frame, content):
     features_full_list = base_features + quadratic_columns + log_columns + boolean_columns
 
     # save stuff for future prediction
-    prediction_stuff = {"methods": content['methods'], "features_full_list": features_full_list, "dummies": dummies,
+    prediction_stuff = {"methods": content['methods'], "features_full_list": features_full_list,
                         "to_log_transform": to_log_transform, "to_pow_transform": to_pow_transform}
 
-    instance_collection = db["instance"]
     instance_collection.replace_one({"objectName": "model_for_client"},
                                     {"objectName": "model_for_client", "value": model_for_client},
                                     upsert=True)

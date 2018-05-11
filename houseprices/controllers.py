@@ -32,9 +32,7 @@ def index():
 @app.route('/api/features', methods=['GET'])
 @auth.login_required
 def get_features():
-    response_body = get_train_data_as_df().columns.tolist()
-    response_body.remove('SalePrice')
-    response_body.remove('_id')
+    response_body = get_features_from_db()
     return jsonify(response_body)
 
 
@@ -51,19 +49,17 @@ def train():
 
     verify_request(content)
 
-    df_train = get_train_data_as_df()
-    df_test = get_test_data_as_df()
+    encoded_dataset = db["encoded_dataset"].find({})
+    encoded_dataset = pd.DataFrame(list(encoded_dataset))
+    encoded_dataset.drop(columns="_id", inplace=True)
 
-    df_train_size = df_train.shape[0]
+    instance_collection = db["instance"]
+    train_data_size = instance_collection.find_one({"objectName": "train_data_size"})["value"]
 
-    full_frame = pd.concat([df_train, df_test])
-    full_frame.reset_index(drop=True, inplace=True)
-    features_full_list = train_request_preprocessor(full_frame, content)
+    features_full_list = train_request_preprocessor(encoded_dataset, content)
 
-    df_train = full_frame[:df_train_size]
-    df_test = full_frame[df_train_size:]
-    df_train.reset_index(drop=True, inplace=True)
-    df_test.reset_index(drop=True, inplace=True)
+    df_train = encoded_dataset[:train_data_size]
+    df_test = encoded_dataset[train_data_size:]
 
     response_body = train_request_processor(df_train, df_test, features_full_list, content)
 

@@ -15,7 +15,7 @@ def predict_request_processor(content):
     instance_collection = db["instance"]
     prediction_stuff = instance_collection.find_one({"objectName": "prediction_stuff"})["value"]
     features_full_list = prediction_stuff["features_full_list"]
-    dummies = prediction_stuff["dummies"]
+    dummies = instance_collection.find_one({"objectName": "dummies"})["value"]
     to_log_transform = prediction_stuff["to_log_transform"]
     to_pow_transform = prediction_stuff["to_pow_transform"]
     methods = prediction_stuff["methods"]
