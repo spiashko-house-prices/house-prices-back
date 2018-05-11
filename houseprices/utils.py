@@ -239,20 +239,19 @@ def on_startup():
                                     upsert=True)
     features = full_frame.columns.tolist()
     features.remove('SalePrice')
+    instance_collection.replace_one({"objectName": "dummies"},
+                                    {"objectName": "dummies", "value": dummies},
+                                    upsert=True)
     instance_collection.replace_one({"objectName": "features"},
                                     {"objectName": "features", "value": features},
                                     upsert=True)
-
     instance_collection.replace_one({"objectName": "categorical"},
                                     {"objectName": "categorical", "value": categorical},
                                     upsert=True)
-
     instance_collection.replace_one({"objectName": "numerical_int"},
                                     {"objectName": "numerical_int", "value": numerical_int},
                                     upsert=True)
-
     instance_collection.replace_one({"objectName": "numerical_float"},
                                     {"objectName": "numerical_float", "value": numerical_float},
                                     upsert=True)
-
     return dummies
