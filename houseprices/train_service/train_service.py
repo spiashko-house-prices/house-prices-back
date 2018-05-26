@@ -21,7 +21,8 @@ def verify_request(content):
     for index, row in methods_df.iterrows():
         if row['name'] in available_trainers:
             values_sum += row['value']
-    assert values_sum == 1
+    if values_sum != 1:
+        print("Warning: values_sum != 1")
 
 
 def train_request_preprocessor(full_frame, content):
