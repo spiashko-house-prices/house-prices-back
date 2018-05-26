@@ -225,8 +225,10 @@ def on_startup():
 
     dummies = {}
 
+    full_frame['SalePrice'] = np.log1p(full_frame['SalePrice'])
     for c in categorical:
         dummies[c] = encode(full_frame, c)
+    full_frame['SalePrice'] = np.expm1(full_frame['SalePrice'])
 
     encoded_dataset_collection = db["encoded_dataset"]
     encoded_dataset_collection.remove({})
