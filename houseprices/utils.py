@@ -123,7 +123,7 @@ def get_type_list(g, type_name):
 
 def log_transformation(frame, feature):
     new_feature_name = new_log_feature_name(feature)
-    frame[new_feature_name] = np.log1p(frame[feature].values)
+    frame[new_feature_name] = frame[new_feature_name].applay(lambda x: 0 if x < 1 else np.log1p(x))
 
 
 def new_quadratic_feature_name(feature):
